@@ -1,0 +1,116 @@
+##############################################################################
+#
+#    OpenERP, Open Source Management Solution
+#    Copyright (C) 2004-2010 Tiny SPRL (<http://www.browseinfo.in>).
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as
+#    published by the Free Software Foundation, either version 3 of the
+#    License, or (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <http://www.browseinfo.in/licenses/>.
+#
+##############################################################################
+
+from openerp.osv import fields, osv
+from openerp.tools.translate import _
+
+from datetime import datetime,time
+from dateutil.relativedelta import relativedelta
+import time
+from operator import itemgetter
+from itertools import groupby
+
+from openerp.osv import fields, osv, orm
+from openerp.tools.translate import _
+from openerp import netsvc
+from openerp import tools
+import logging
+import csv
+import base64
+import cStringIO
+from openerp.tools.translate import _
+import sys
+from urllib2 import urlopen
+from xlwt import Workbook, easyxf, Formula
+import StringIO
+class import_hk_wizard(osv.osv_memory):
+    
+
+    def import_csv(self, cr, uid, ids, context=None):
+        print '--------------------------call ----------------------'
+        account_obj = self.pool.get('account.account')
+        reader = csv.DictReader(open('/home/office/Sasmar_HK.xlsx', "rb"), delimiter='\t')
+        print "@@##$$%%%%",reader
+        count = 0
+        data_create ={}
+        for row in reader:
+            print "in for loop",row,count
+            if count == 0:
+                count += 1
+                continue
+            account = self.pool.get('account.account')
+            account_code=account.search(cr, uid, [('code', '=', row['Account No.'])],context=context) 
+            print account_code,"@@@@@@@@@@@@@@@@@@"
+            if account_code:
+                account_code = account_code[0]
+            else:
+                account_code= account.create(cr, uid, {'code':row['Account No.']},context=context)
+            
+
+
+            account_one = self.pool.get('account.account')
+            account_parent=account_one.search(cr, uid, [('code', '=', row['Parent Account']),('parent_id', '=', partner_id)],context=context) 
+            print account_parent,"@@@@@@@@@@@@@@@@@@"
+            if account_parent:
+                account_parent = account_parent[0]
+            else:
+                account_parent= account_one.create(cr, uid, {'code':row['Parent Account'],'parent_id':partner_id},context=context)
+
+
+            account_two = self.pool.get('account.account')
+            account_name=account_two.search(cr, uid, [('code', '=', row['Account']),('parent_id', '=',partner_id)],context=context) 
+            print account_name,"@@@@@@@@@@@@@@@@@@"
+            if account_name:
+                account_name = account_name[0]
+            else:
+                account_name= account_two.create(cr, uid, {'code':row['Account'],'parent_id':partner_id},context=context)
+
+            
+            account_user = self.pool.get('account.account')
+            usr_type_id=account_user.search(cr, uid, [('code', '=', row['User Type']),('parent_id', '=',partner_id)],context=context) 
+            print usr_type_id,"@@@@@@@@@@@@@@@@@@"
+            if usr_type_id:
+                usr_type_id = usr_type_id[0]
+            else:
+                usr_type_id= account_user.create(cr, uid, {'code':row['User Type'],'parent_id':partner_id},context=context)
+
+
+            account_type = self.pool.get('account.account')
+            type_id=account_type.search(cr, uid, [('code', '=', row['Internal Type']),('parent_id', '=',partner_id)],context=context) 
+            print type_id,"@@@@@@@@@@@@@@@@@@"
+            if type_id:
+                type_id = type_id_four[0]
+            else:
+                type_id= account_type.create(cr, uid, {'code':row['Internal Type'],'parent_id':partner_id},context=context)
+
+
+            
+            data_create = {
+                            'code' : account_code,
+                            'parent_id' : account_parent,
+                            'name' : account_name,
+                            'user_type': usr_type_id,
+                            'type': type_id, 
+            }
+            print 'data_create----------------------------------------',data_create
+            order_id=account_obj.create(cr, uid, data_create)
+            print "@@@@!!! Order ID @@@@",order_id
+
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
